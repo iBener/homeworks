@@ -11,77 +11,144 @@ namespace LOCCounterNet
 
         public string DosyaFiltresi { get { return ".cs|.csharp"; } }
 
-        private bool inBlockComment = false;
+        private bool blockCommentFlag = false;
+        private bool partNameLineFlag = false;
+        private int partParantezBaslangic = 0;
+        private int parantezler = 0;
 
-        public IEnumerable<Sonuc> SatirSay(string[] satirlar)
+        public Sonuc SatirSay(string[] satirlar)
         {
-            var c = new MyClass();
+            blockCommentFlag = false;
+            partNameLineFlag = false;
+            partParantezBaslangic = 0;
+            parantezler = 0;
 
-            var sonuc = new List<Sonuc>();
-            var son = new Sonuc();
-            var partNameLine = false;
+            var sonuc = new Sonuc();
+            var partNames = new List<string>();
             foreach (var satir in satirlar)
             {
-                if (BosVeyaComment(satir))
+                var s = CommentVeStringCikar(satir);
+                if (String.IsNullOrWhiteSpace(s))
                 {
                     continue;
                 }
 
-                son.Size += 1;
+                sonuc.Size += 1;
+                ParantezSayYukari(s);
 
-                if (satir.Contains("class") && satir.Contains("interface") && satir.Contains("enum") && partNameLine)
+                var partName = GetPartName(s);
+                if (!String.IsNullOrEmpty(partName))
                 {
-                    var partNameStartIndex = 0;
-                    if (satir.Contains("class"))
-                    {
-                        partNameStartIndex = satir.IndexOf("class");
-                    }
-                    else if (satir.Contains("interface"))
-                    {
-                        partNameStartIndex = satir.IndexOf("class");
-                    }
-                    else if (satir.Contains("enum"))
-                    {
-                        partNameStartIndex = satir.IndexOf("class");
-                    }
-                    var partName = satir.Substring(partNameStartIndex).Trim();
-                    partNameLine = true;
+                    partNames.Add(partName);
                 }
-                if (partNameLine)
+
+                if (partParantezBaslangic > 0 && partParantezBaslangic + 1 == parantezler)
                 {
-
-
+                    sonuc.ItemCount += 1;
                 }
+
+                ParantezSayAsagi(s);
             }
 
+            sonuc.PartName = String.Join(", ", partNames.ToArray());
 
             return sonuc;
         }
 
-        bool BosVeyaComment(string satir)
+        private void ParantezSayYukari(string s)
         {
-            if (String.IsNullOrWhiteSpace(satir))
+            if (s.Contains("{"))
             {
-                return true; // boş satır
+                parantezler++;
             }
-            if (satir.Contains("/*"))
+        }
+
+        private void ParantezSayAsagi(string s)
+        {
+            if (s.Contains("}"))
             {
-                inBlockComment = true;
+                parantezler--;
             }
-            if (satir.Contains("*/"))
+        }
+
+        private string GetPartName(string satir)
+        {
+            if (satir.Contains("class") || satir.Contains("interface") || satir.Contains("enum") || partNameLineFlag)
             {
-                inBlockComment = false;
-                return false;
+                partParantezBaslangic = parantezler;
+                var partNameStartIndex = 0;
+                if (satir.Contains("class"))
+                {
+                    partNameStartIndex = satir.IndexOf("class") + "class".Length;
+                }
+                else if (satir.Contains("interface"))
+                {
+                    partNameStartIndex = satir.IndexOf("interface") + "interface".Length;
+                }
+                else if (satir.Contains("enum"))
+                {
+                    partNameStartIndex = satir.IndexOf("enum") + "enum".Length;
+                }
+                var partName = satir.Substring(partNameStartIndex).Trim();
+                if (!String.IsNullOrWhiteSpace(partName))
+                {
+                    partNameLineFlag = false;
+                    return partName;
+                }
+                partNameLineFlag = true;
             }
-            if (inBlockComment)
+            return String.Empty;
+        }
+
+        string CommentVeStringCikar(string satir)
+        {
+            var s = StringCikar(satir);
+            if (blockCommentFlag)
             {
-                return true;
+                if (s.Contains("*/"))
+                {
+                    var blokBitis = s.IndexOf("*/");
+                    s = s.Substring(blokBitis + 2);
+                    blockCommentFlag = false;
+                }
+                else
+                {
+                    return String.Empty;
+                }
             }
-            if (satir.TrimStart().StartsWith("//"))
+            if (s.Contains("/*"))
             {
-                return true; // line comment
+                var blokBaslangic = s.IndexOf("/*");
+                var blokBitis = s.IndexOf("*/", blokBaslangic + 1);
+                if (blokBitis >= blokBaslangic)
+                {
+                    s = s.Remove(blokBaslangic, blokBitis - blokBaslangic + 2);
+                }
+                else
+                {
+                    s = s.Remove(blokBaslangic);
+                    blockCommentFlag = true;
+                }
             }
-            return false;
+            if (s.Contains("//"))
+            {
+                var commentBaslangic = s.IndexOf("//");
+                s = s.Substring(0, commentBaslangic);
+            }
+            return s;
+        }
+
+        private string StringCikar(string satir)
+        {
+            var s = satir.Replace("\\\"", "");
+            var i = s.IndexOf("\"");
+            while (i >= 0)
+            {
+                var j = s.IndexOf("\"", i + 1);
+                s = s.Remove(i, j - i + 1);
+                i = s.IndexOf("\"");
+            }
+            return s;
         }
     }
 }

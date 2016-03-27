@@ -43,13 +43,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CSharpKaynakKodu.cs" />
-    <Compile Include="Proje.cs" />
-    <Compile Include="IKaynakKod.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="src\CSharpKaynakKodu.cs" />
+    <Compile Include="src\Proje.cs" />
+    <Compile Include="src\IKaynakKod.cs" />
+    <Compile Include="src\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SatirSayici.cs" />
-    <Compile Include="Sonuc.cs" />
+    <Compile Include="src\SatirSayici.cs" />
+    <Compile Include="src\Sonuc.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

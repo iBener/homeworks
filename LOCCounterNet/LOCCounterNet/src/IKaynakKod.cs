@@ -7,27 +7,32 @@ using System.Threading.Tasks;
 namespace LOCCounterNet
 {
     /// <summary>
-    /// Block comment
+    /// 
     /// </summary>
     interface IKaynakKod
     {
         string DosyaFiltresi { get; }
 
-        //line comment
         IEnumerable<Sonuc> SatirSay(string[] satirlar);
     }
 
 
 
-    public class MyClass
+    public class 
+        MyClass
     {
+        int a = 0; /*
+        block comment
+        aaa */ public int b = 1;
         public int MyProperty { get; set; }
 
+        //line comment
         void foo()
         {
 
         }
 
+        //line comment
         string bar()
         {
 

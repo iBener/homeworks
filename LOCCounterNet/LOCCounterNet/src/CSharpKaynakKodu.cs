@@ -90,6 +90,14 @@ namespace LOCCounterNet
                     partNameStartIndex = satir.IndexOf("enum") + "enum".Length;
                 }
                 var partName = satir.Substring(partNameStartIndex).Trim();
+                if (partName.Contains(" "))
+                {
+                    partName = partName.Substring(0, partName.IndexOf(" "));
+                }
+                if (partName.Contains(":"))
+                {
+                    partName = partName.Substring(0, partName.IndexOf(":"));
+                }
                 if (!String.IsNullOrWhiteSpace(partName))
                 {
                     partNameLineFlag = false;

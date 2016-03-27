@@ -49,27 +49,25 @@ namespace LOCCounterNet
                 var p = new Proje(path);
                 foreach (var item in p.Dosyalar)
                 {
-                    foreach (var ks in KodSayicilar)
+                    var ks = KaynakKodSayiciBul(item);
+                    if (ks != null)
                     {
-                        if (UygunKaynakKodu(item, ks))
+                        var lines = IO.File.ReadAllLines(item);
+                        var sonuc = ks.SatirSay(lines);
+                        if (String.IsNullOrWhiteSpace(sonuc.PartName))
                         {
-                            var lines = IO.File.ReadAllLines(item);
-                            var sonuc = ks.SatirSay(lines);
-                            if (String.IsNullOrWhiteSpace(sonuc.PartName))
-                            {
-                                sonuc.PartName = IO.Path.GetFileName(item);
-                            }
-                            sonuclar.Add(sonuc);
+                            sonuc.PartName = IO.Path.GetFileName(item);
                         }
+                        sonuclar.Add(sonuc);
                     }
                 }
             }
 
-            Console.WriteLine("{0}{1}{2}{3}{4}", 
-                "#Program".PadRight(10), 
-                "Part Name".PadRight(20), 
-                "#Items".PadRight(8), 
-                "Size".PadRight(8), 
+            Console.WriteLine("{0}{1}{2}{3}{4}",
+                "#Program".PadRight(10),
+                "Part Name".PadRight(20),
+                "#Items".PadRight(8),
+                "Size".PadRight(8),
                 "Total Size");
             var number = "1";
             var totalSize = 0;
@@ -77,10 +75,10 @@ namespace LOCCounterNet
             {
                 if (sonuc.Size != 0)
                 {
-                    Console.WriteLine("{0}{1}{2}{3}{4}", 
-                        number.PadRight(10), 
-                        sonuc.PartName.PadRight(20), 
-                        sonuc.ItemCount.ToString().PadRight(8), 
+                    Console.WriteLine("{0}{1}{2}{3}{4}",
+                        number.PadRight(10),
+                        sonuc.PartName.PadRight(20),
+                        sonuc.ItemCount.ToString().PadRight(8),
                         sonuc.Size.ToString().PadRight(8), "");
                     number = "";
                     totalSize += sonuc.Size;
@@ -94,17 +92,20 @@ namespace LOCCounterNet
                 totalSize.ToString());
         }
 
-        private bool UygunKaynakKodu(string item, IKaynakKod ks)
+        private IKaynakKod KaynakKodSayiciBul(string item)
         {
             var dosyaUzantisi = IO.Path.GetExtension(item);
-            foreach (var uzanti in ks.DosyaFiltresi.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var ks in KodSayicilar)
             {
-                if (dosyaUzantisi.Equals(uzanti))
+                foreach (var uzanti in ks.DosyaFiltresi.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    return true;
+                    if (dosyaUzantisi.Equals(uzanti))
+                    {
+                        return ks;
+                    }
                 }
             }
-            return false;
+            return null;
         }
     }
 }

@@ -11,22 +11,28 @@ namespace LOCCounterNet
 
         public string DosyaFiltresi { get { return ".cs|.csharp"; } }
 
-        private bool blockCommentFlag = false;
-        private bool partNameLineFlag = false;
-        private int partParantezBaslangic = 0;
-        private int parantezler = 0;
+        private bool blockCommentFlag;
+        private bool partNameLineFlag;
+        List<string> partNames;
+        Stack<int> partBaslangicParantez;
+        private int parantezler;
+        private int itemCount;
 
         public Sonuc SatirSay(string[] satirlar)
         {
             blockCommentFlag = false;
             partNameLineFlag = false;
-            partParantezBaslangic = 0;
+            partBaslangicParantez = new Stack<int>();
             parantezler = 0;
+            partNames = new List<string>();
+            itemCount = 0;
+
+            int i = -1;
 
             var sonuc = new Sonuc();
-            var partNames = new List<string>();
             foreach (var satir in satirlar)
             {
+                i++;
                 var s = CommentVeStringCikar(satir);
                 if (String.IsNullOrWhiteSpace(s))
                 {
@@ -34,25 +40,32 @@ namespace LOCCounterNet
                 }
 
                 sonuc.Size += 1;
+
                 ParantezSayYukari(s);
 
-                var partName = GetPartName(s);
-                if (!String.IsNullOrEmpty(partName))
-                {
-                    partNames.Add(partName);
-                }
+                PartNameSay(s);
 
-                if (partParantezBaslangic > 0 && partParantezBaslangic + 1 == parantezler)
-                {
-                    sonuc.ItemCount += 1;
-                }
+                ItemSay(s);
 
                 ParantezSayAsagi(s);
             }
 
             sonuc.PartName = String.Join(", ", partNames.ToArray());
+            sonuc.ItemCount = itemCount;
 
             return sonuc;
+        }
+
+        private void ItemSay(string s)
+        {
+            if (partBaslangicParantez.Count > 0)
+            {
+                var sonPartBaslangic = partBaslangicParantez.Peek();
+                if (s.Contains("{") && parantezler - 1 == sonPartBaslangic)
+                {
+                    itemCount++;
+                }
+            }
         }
 
         private void ParantezSayYukari(string s)
@@ -67,15 +80,22 @@ namespace LOCCounterNet
         {
             if (s.Contains("}"))
             {
+                if (partBaslangicParantez.Count > 0)
+                {
+                    var sonPartBaslangic = partBaslangicParantez.Peek();
+                    if (parantezler == sonPartBaslangic)
+                    {
+                        partBaslangicParantez.Pop();
+                    }
+                }
                 parantezler--;
             }
         }
 
-        private string GetPartName(string satir)
+        private string PartNameSay(string satir)
         {
             if (satir.Contains("class") || satir.Contains("interface") || satir.Contains("enum") || partNameLineFlag)
             {
-                partParantezBaslangic = parantezler;
                 var partNameStartIndex = 0;
                 if (satir.Contains("class"))
                 {
@@ -101,6 +121,8 @@ namespace LOCCounterNet
                 if (!String.IsNullOrWhiteSpace(partName))
                 {
                     partNameLineFlag = false;
+                    partBaslangicParantez.Push(parantezler + (satir.Contains("{") ? 0 : 1));
+                    partNames.Add(partName);
                     return partName;
                 }
                 partNameLineFlag = true;

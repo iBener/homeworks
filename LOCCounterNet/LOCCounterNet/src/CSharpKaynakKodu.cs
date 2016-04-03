@@ -6,9 +6,14 @@ using System.Threading.Tasks;
 
 namespace LOCCounterNet
 {
+    /// <summary>
+    /// C# kaynak kodu satır sayıcı nesnesi.
+    /// </summary>
     class CSharpKaynakKodu : IKaynakKod
     {
-
+        /// <summary>
+        /// C# kaynak kodu dosya uzantısı. İkinci uzantı sadece deneme için verildi.
+        /// </summary>
         public string DosyaFiltresi { get { return ".cs|.csharp"; } }
 
         private bool blockCommentFlag;
@@ -18,8 +23,12 @@ namespace LOCCounterNet
         private int parantezler;
         private int itemCount;
 
+        /// <summary>
+        /// C# satır sayma metodu
+        /// </summary>
         public Sonuc SatirSay(string[] satirlar)
         {
+            //değişkenleri hazırla
             blockCommentFlag = false;
             partNameLineFlag = false;
             partBaslangicParantez = new Stack<int>();
@@ -27,8 +36,10 @@ namespace LOCCounterNet
             partNames = new List<string>();
             itemCount = 0;
 
+            //debug larken izleme için kullanılan değişken
             int i = -1;
 
+            //sayma döngüsü
             var sonuc = new Sonuc();
             foreach (var satir in satirlar)
             {
@@ -50,6 +61,7 @@ namespace LOCCounterNet
                 ParantezSayAsagi(s);
             }
 
+            //sonuçlar
             sonuc.PartName = String.Join(", ", partNames.ToArray());
             sonuc.ItemCount = itemCount;
 
@@ -92,6 +104,9 @@ namespace LOCCounterNet
             }
         }
 
+        /// <summary>
+        /// Part'ların (class, interface, enum) sayılması
+        /// </summary>
         private string PartNameSay(string satir)
         {
             if (satir.Contains("class") || satir.Contains("interface") || satir.Contains("enum") || partNameLineFlag)
@@ -120,16 +135,22 @@ namespace LOCCounterNet
                 }
                 if (!String.IsNullOrWhiteSpace(partName))
                 {
+                    //part ismini buldum
                     partNameLineFlag = false;
                     partBaslangicParantez.Push(parantezler + (satir.Contains("{") ? 0 : 1));
                     partNames.Add(partName);
                     return partName;
                 }
+                //part ismi sonraki satırda
                 partNameLineFlag = true;
             }
+            //part yok
             return String.Empty;
         }
 
+        /// <summary>
+        /// Verilen satırdaki "comment" ve "string literal"lerin çıkarılmasını sağlar.
+        /// </summary>
         string CommentVeStringCikar(string satir)
         {
             var s = StringCikar(satir);
@@ -168,6 +189,9 @@ namespace LOCCounterNet
             return s;
         }
 
+        /// <summary>
+        /// Verilen satırdaki "string literal"lerin çıkarılmasını sağlar.
+        /// </summary>
         private string StringCikar(string satir)
         {
             var s = satir.Replace("\\\"", "");

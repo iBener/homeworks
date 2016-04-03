@@ -7,6 +7,9 @@ using IO = System.IO;
 
 namespace LOCCounterNet
 {
+    /// <summary>
+    /// Komut satırından verilen her bir path bir proje olarak kabul edilir.
+    /// </summary>
     class Proje
     {
         private string _anaPath;
@@ -19,6 +22,9 @@ namespace LOCCounterNet
             DosyalariOku(_anaPath);
         }
 
+        /// <summary>
+        /// Proje klasörü içindeki tüm dosyaların bulunmasını sağlar.
+        /// </summary>
         private void DosyalariOku(string path)
         {
             if (IO.File.Exists(path))

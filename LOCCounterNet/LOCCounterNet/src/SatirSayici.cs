@@ -43,9 +43,13 @@ namespace LOCCounterNet
 
         public void Say(string[] args)
         {
-            var sonuclar = new List<Sonuc>();
+            SatirYaz("#Program", "Part Name", "#Items", "Size", "Total Size");
+            var number = 0;
+            var son = 0;
             foreach (var path in args)
             {
+                number++;
+                var totalSize = 0;
                 var p = new Proje(path);
                 foreach (var item in p.Dosyalar)
                 {
@@ -58,40 +62,33 @@ namespace LOCCounterNet
                         {
                             sonuc.PartName = IO.Path.GetFileName(item);
                         }
-                        sonuclar.Add(sonuc);
+                        totalSize += sonuc.Size;
+                        SatirYaz((number == son ? "" : number.ToString()), sonuc);
+                        son = number;
                     }
                 }
+                SatirYaz("", "", "", "", totalSize.ToString());
             }
-
-            Console.WriteLine("{0}{1}{2}{3}{4}",
-                "#Program".PadRight(10),
-                "Part Name".PadRight(20),
-                "#Items".PadRight(8),
-                "Size".PadRight(8),
-                "Total Size");
-            var number = "1";
-            var totalSize = 0;
-            foreach (var sonuc in sonuclar)
-            {
-                if (sonuc.Size != 0)
-                {
-                    Console.WriteLine("{0}{1}{2}{3}{4}",
-                        number.PadRight(10),
-                        sonuc.PartName.PadRight(20),
-                        sonuc.ItemCount.ToString().PadRight(8),
-                        sonuc.Size.ToString().PadRight(8), "");
-                    number = "";
-                    totalSize += sonuc.Size;
-                }
-            }
-            Console.WriteLine("{0}{1}{2}{3}{4}",
-                "".PadRight(10),
-                "".PadRight(20),
-                "".PadRight(8),
-                "".PadRight(8),
-                totalSize.ToString());
         }
 
+        private void SatirYaz(string number, Sonuc sonuc)
+        {
+            SatirYaz(number, sonuc.PartName, sonuc.ItemCount.ToString(), sonuc.Size.ToString(), "");
+        }
+
+        private void SatirYaz(string number, string partName, string itemCount, string size, string totalSize)
+        {
+            Console.WriteLine("{0}{1}{2}{3}{4}",
+                number.PadRight(10),
+                partName.PadRight(20),
+                itemCount.PadRight(8),
+                size.PadRight(8),
+                totalSize);
+        }
+
+        /// <summary>
+        /// Verilen dosyanın uzantısına göre kaynak kod sayıcı nesnesini verir.
+        /// </summary>
         private IKaynakKod KaynakKodSayiciBul(string item)
         {
             var dosyaUzantisi = IO.Path.GetExtension(item);
